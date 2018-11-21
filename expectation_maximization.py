@@ -102,3 +102,52 @@ def _create_alignment_prob_frame(m,l_plus_1):
         sentence_align_prob[mi]=word_align_prob
 
     return sentence_align_prob
+
+def maximize_my_expectation_one_step(trans_prob,align_prob):
+    '''
+    This function will take the tanslation probability of each word to
+    word translation along with the positional alignment probability
+    and them run one step of expectation maximization by estimating the
+    alignment which will in-turn change the translation probabilty.
+    '''
+    #Retreiving the foreign and english words
+    foreign_words=trans_prob.keys()
+    english_words=trans_prob[foreign_words[0]].keys()
+
+    #Initializing the count dict
+    count_trans_f2e={}
+    count_f={}
+    for fword in foreign_words:
+        count_f[fword]=0.0
+        for eword in english_words:
+            count_trans_f2e[(eword,fword)]=0.0
+
+    #Initializing the alignent count dict for each sentence
+    count_align_i2j={}
+    count_i={}
+    for idx in range(len(align_prob.keys())):
+        ms=len(align_prob[idx].keys())
+        l_plus_1=len(align_prob[idx][0].keys())
+        for i in range(ms):
+            count_i[(idx,i)]=0.0
+            for j in range(l_plus_1):
+                count_align_i2j[(idx,i,j)]=0.0
+
+    #Now we will iterate over all the examples
+    for examples in range(len(align_prob.keys())):
+        #Retreiving the ms and lvalue
+        ms=len(align_prob[idx].keys())
+        l_plus_1=len(align_prob[idx][0].keys())
+
+        #Now iterating over the words of source (aka english)
+        for i in range(ms):
+            for j in range(l_plus_1):
+                #Calculating the expected count
+
+def _get_expected_count(idx,i,j,trans_prob,align_prob,
+                        foreign_words,english_words):
+    '''
+    This will give the expected count for a partucluar index
+    for a particular ith source word to jth foreign word mapping.
+    '''
+    delta=align_prob[idx][i][j]*trans_prob[foreign_words[]]
