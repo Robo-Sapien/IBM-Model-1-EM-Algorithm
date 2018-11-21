@@ -38,9 +38,11 @@ def tokenize(target_corpus, source_corpus):
 if __name__=='__main__':
 	#model1_raw_output = IBM([['klein', 'ist', 'das', 'haus'],['das', 'haus', 'ist', 'ja', 'gro'],['das', 'buch', 'ist', 'ja', 'klein'],['das', 'haus'],['das', 'buch'],['ein', 'buch']], [['the', 'house', 'is', 'small'], ['the', 'house', 'is', 'big'], ['the', 'book', 'is', 'small'], ['the', 'house'], ['the', 'book'], ['a', 'book']],1)
 
-	target_listOflists_words,source_listOflists_words = ["la maison","la fleur","la maison bleu","la fleur bleu","pomme bleu"],["the house","the flower","the blue house","the blue flower","blue apple"]
+	#target_listOflists_words,source_listOflists_words = ["la maison","la fleur","la maison bleu","la fleur bleu","pomme bleu"],["the house","the flower","the blue house","the blue flower","blue apple"]
 	
 	#target_listOflists_words,source_listOflists_words = tokenize(target_corpus,source_corpus)
+
+	target_listOflists_words,source_listOflists_words = target_corpus,source_corpus
 
 	model1_raw_output = IBM(target_listOflists_words, source_listOflists_words, 1)
 	model2_raw_output = IBM(target_listOflists_words, source_listOflists_words, 2)
