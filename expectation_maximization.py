@@ -1,6 +1,7 @@
 import numpy as np
 from parse_data import *
 from PhraseBased import PhraseBased
+import datetime
 
 ####################### INITIALIZATION ###########################
 def create_word_translation_prob_dict(parallel_corpus,foreign_name='fr'):
@@ -196,8 +197,8 @@ def expectum_maximum(trans_prob,align_prob,iteration=20):
     until convergence.
     '''
     for iter in range(iteration):
-        print ("\n\n\n\n\n\n\n")
-        _print_the_prob_dicts(trans_prob,align_prob)
+        #print ("\n\n\n\n\n\n\n")
+        #_print_the_prob_dicts(trans_prob,align_prob)
         trans_prob,align_prob=maximize_my_expectation_one_step(trans_prob,
                                                         align_prob)
 
@@ -282,6 +283,7 @@ def _print_the_prob_dicts(trans_prob,align_prob):
 if __name__=='__main__':
     #Loading the parallel corpus
     filename='corpus/testData.json'
+    t0 = datetime.datetime.now()
     parallel_corpus=load_data_from_json(filename)
 
     #Initializing the word translation probability dict
@@ -294,7 +296,12 @@ if __name__=='__main__':
 
     #Extracting the best possible alignemnt
     alignments = extract_alignment(parallel_corpus,trans_prob,align_prob)
+    t1 = datetime.datetime.now()
+    print(t1-t0)
     print ("\n\n\n\n\n\n")
+    t2 = datetime.datetime.now()
     obj = PhraseBased(filename)
     obj.extractPhrases(alignments)
     obj.calculateProbabilityScore()
+    t3 = datetime.datetime.now()
+    print(t3-t2)

@@ -3,9 +3,14 @@ from nltk.translate.ibm1 import IBMModel1
 from nltk.translate.ibm2 import IBMModel2
 from nltk import word_tokenize
 from parse_data import *
+import datetime
 
 
 def IBM(target_listOflists_words, source_listOflists_words, flag):
+	'''
+	This function takes parallel corpus as input and flag variable (1 for IBM Model 1 & 2 for IBM Model 2) and outputs 
+	the alignments
+	'''
 
 	model1_output_list = []
 
@@ -22,6 +27,9 @@ def IBM(target_listOflists_words, source_listOflists_words, flag):
 	return model1_output_list
 
 def tokenize(target_corpus, source_corpus):
+	'''
+	This helper function tokenizes the sentences into words to be used as input for NLTK implementations
+	'''
 	target_listOflists_words = []
 	source_listOflists_words = []
 	for target_sent, source_sent in zip(target_corpus,source_corpus):
@@ -37,7 +45,7 @@ def tokenize(target_corpus, source_corpus):
 	return target_listOflists_words,source_listOflists_words
 
 if __name__=='__main__':
-	filename='corpus/data1.json'
+	filename='corpus/testData.json'
 	parallel_corpus=load_data_from_json(filename)
 	#Creating target and source corpus
 	target_corpus=[]
@@ -56,11 +64,16 @@ if __name__=='__main__':
 	#target_listOflists_words,source_listOflists_words = tokenize(target_corpus,source_corpus)
 
 	target_listOflists_words,source_listOflists_words = target_corpus,source_corpus
-
+	t0 = datetime.datetime.now()
 	model1_raw_output = IBM(target_listOflists_words, source_listOflists_words, 1)
+	t1 = datetime.datetime.now()
 	model2_raw_output = IBM(target_listOflists_words, source_listOflists_words, 2)
+	t2 = datetime.datetime.now()
 
-	print(model2_raw_output)
+	print(t1-t0)
+	print(t2-t1)
+
+	#print(model2_raw_output)
 	
 	print("##### MODEL 1 #####")
 	for list in model1_raw_output:
