@@ -297,11 +297,11 @@ if __name__=='__main__':
     #Extracting the best possible alignemnt
     alignments = extract_alignment(parallel_corpus,trans_prob,align_prob)
     t1 = datetime.datetime.now()
-    print(t1-t0)
+    #print(t1-t0)
     print ("\n\n\n\n\n\n")
     t2 = datetime.datetime.now()
     obj = PhraseBased(filename)
     obj.extractPhrases(alignments)
     obj.calculateProbabilityScore()
     t3 = datetime.datetime.now()
-    print(t3-t2)
+    #print(t3-t2)

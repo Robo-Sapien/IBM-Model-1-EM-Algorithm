@@ -45,7 +45,7 @@ def tokenize(target_corpus, source_corpus):
 	return target_listOflists_words,source_listOflists_words
 
 if __name__=='__main__':
-	filename='corpus/testData.json'
+	filename='corpus/data1.json'
 	parallel_corpus=load_data_from_json(filename)
 	#Creating target and source corpus
 	target_corpus=[]
@@ -70,27 +70,28 @@ if __name__=='__main__':
 	model2_raw_output = IBM(target_listOflists_words, source_listOflists_words, 2)
 	t2 = datetime.datetime.now()
 
-	print(t1-t0)
-	print(t2-t1)
+	#print(t1-t0)
+	#print(t2-t1)
+	if(filename=='corpus/data2.json'):
+		print(model2_raw_output)
+	else:
 
-	#print(model2_raw_output)
+		print("##### MODEL 1 #####")
+		for list in model1_raw_output:
+			print(list.words)
+			print(list.mots)
+			print(list.alignment)
+			print(" ")
+
+		print(" ")
+		print("##### MODEL 2 #####")	
+
+
+		for list in model2_raw_output:
+			#print(list)
+			
+			print(list.words)
+			print(list.mots)
+			print(list.alignment)
+			print(" ")
 	
-	print("##### MODEL 1 #####")
-	for list in model1_raw_output:
-		print(list.words)
-		print(list.mots)
-		print(list.alignment)
-		print(" ")
-
-	print(" ")
-	print("##### MODEL 2 #####")	
-
-
-	for list in model2_raw_output:
-		#print(list)
-		
-		print(list.words)
-		print(list.mots)
-		print(list.alignment)
-		print(" ")
-		
