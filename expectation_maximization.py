@@ -281,7 +281,7 @@ def _print_the_prob_dicts(trans_prob,align_prob):
 ##################### MAIN FUNCTION ##########################
 if __name__=='__main__':
     #Loading the parallel corpus
-    filename='corpus/customdata.json'
+    filename='corpus/testData.json'
     parallel_corpus=load_data_from_json(filename)
 
     #Initializing the word translation probability dict
