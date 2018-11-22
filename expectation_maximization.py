@@ -202,6 +202,59 @@ def expectum_maximum(trans_prob,align_prob,iteration=20):
 
     return trans_prob,align_prob
 
+def extract_most_probable_alignment_of_pair(sent_id,sent_pair,trans_prob,
+                                            align_prob,foreign_name='fr'):
+    '''
+    This function will use the converged values of the alignment
+    and the translation probability to extract the most probable alignment
+    of each sentence.
+    '''
+    #Extracting out the sentence (in order)
+    eng_words=sent_pair['en'].split(' ')
+    for_words=sent_pair[foreign_name].split(' ')
+    #Appending the NULL word at the end
+    for_words.append('NULL')
+
+    #Starting the alignment for each word to corresponding
+    align_list=[]
+    for i,eword in enumerate(eng_words):#trevalling through each source word
+        max_prob=0.0    #unnormalized probability
+        max_idx=-1
+        for j,fword in enumerate(for_words):
+            #Calculating the alignemnt probability of this edge
+            temp_prob=align_prob[sent_id][eword][fword]*\
+                        trans_prob[fword][eword]
+            #Now checking the max probable alignment
+            if(temp_prob>max_prob):
+                max_prob=temp_prob
+                max_idx=j
+        #Now we got the word mapping which has maximum
+        #probability of translation from current source word
+        align_list.append((i,max_idx))
+
+    return align_list
+
+def extract_alignment(parallel_corpus,trans_prob,align_prob):
+    '''
+    This function will extract the alignment for each sentences
+    and return the list of all the alignemnt of each sentences.
+    '''
+    all_align_list=[]
+    print "\n\n\n\nFinding the best possible alignment"
+    #Iterating over all the sentences and getting the alignment
+    for idx,sent_pair in enumerate(parallel_corpus):
+        #Finding the alignemnt for this sentence pair
+        align_list=extract_most_probable_alignment_of_pair(idx,sent_pair,
+                                            trans_prob,align_prob)
+        #Appending the alignment for this sentences
+        all_align_list.append(align_list)
+
+        #Printing the alignment
+        print "Best alignment for sentence: ",idx
+        print align_list
+
+    return all_align_list
+
 ##################### AUXILARY ###############################
 def _print_the_prob_dicts(trans_prob,align_prob):
     '''
@@ -236,4 +289,7 @@ if __name__=='__main__':
 
     #Running the expectation maximization step
     iteration=20
-    expectum_maximum(trans_prob,align_prob,iteration)
+    trans_prob,align_prob=expectum_maximum(trans_prob,align_prob,iteration)
+
+    #Extracting the best possible alignemnt
+    extract_alignment(parallel_corpus,trans_prob,align_prob)
