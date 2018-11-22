@@ -1,6 +1,7 @@
 import numpy as np
 from parse_data import *
 
+####################### INITIALIZATION ###########################
 def create_word_translation_prob_dict(parallel_corpus,foreign_name='fr'):
     '''
     This will create a dictionary mapping each french word to corresponding
@@ -105,6 +106,7 @@ def _create_alignment_prob_frame(eng_words,for_words):
 
     return sentence_align_prob
 
+###################### EM-ALGORITHM #############################
 def maximize_my_expectation_one_step(trans_prob,align_prob):
     '''
     This function will take the tanslation probability of each word to
@@ -154,8 +156,8 @@ def maximize_my_expectation_one_step(trans_prob,align_prob):
     #Now after all count is done we will calculate the new probs
     #Calculating the probability of words
     for fword in trans_prob.keys():
-        for eword in trans_prob.keys():
-            trans_prob[fword][eword]=count_trans_f2e[(eword,fword)]/countf[word]
+        for eword in trans_prob[fword].keys():
+            trans_prob[fword][eword]=count_trans_f2e[(eword,fword)]/count_f[fword]
 
     #Calculating the new probablity of alignment
     for idx in align_prob.keys():
@@ -172,6 +174,8 @@ def _get_expected_count(idx,i,j,trans_prob,align_prob):
     for a particular ith source word to jth foreign word mapping.
     '''
     delta=align_prob[idx][i][j]*trans_prob[j][i]
+
+    return delta
 
 def _get_expected_count_norm(idx,i,trans_prob,align_prob):
     '''
@@ -196,6 +200,7 @@ def expectum_maximum(trans_prob,align_prob,iteration=20):
 
     return trans_prob,align_prob
 
+##################### AUXILARY ###############################
 def _print_the_prob_dicts(trans_prob,align_prob):
     '''
     This function will pring the probability dicts for verification
@@ -217,6 +222,7 @@ def _print_the_prob_dicts(trans_prob,align_prob):
                 print "idx:{}\tS:{}\t\tT:{}\t\tprob:{}".format(idx,i,j,
                                                 align_prob[idx][i][j])
 
+##################### MAIN FUNCTION ##########################
 if __name__=='__main__':
     #Loading the parallel corpus
     filename='corpus/data1.json'
