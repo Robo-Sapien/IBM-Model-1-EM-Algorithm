@@ -8,6 +8,7 @@ def load_data_from_json(filename):
     with open(filename) as fhandle:
         data=json.load(fhandle)
         print data
+    return data
 
 
 if __name__=='__main__':

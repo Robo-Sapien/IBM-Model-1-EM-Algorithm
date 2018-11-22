@@ -1,4 +1,5 @@
 import numpy as np
+from parse_data import *
 
 def create_word_translation_prob_dict(parallel_corpus,foreign_name='fr'):
     '''
@@ -67,8 +68,8 @@ def create_alignment_prob_dict(parallel_corpus,foreign_name='fr'):
     #Iterating over all the statements and creating the alignament
     for idx,sent_pair in enumerate(parallel_corpus):
         #counting the number of word in each sentence
-        eng_words=sentence_pair['en'].split(' ')             #(m)
-        for_words=sentence_pair['foreign_name'].split(' ')   #(l)
+        eng_words=sent_pair['en'].split(' ')             #(m)
+        for_words=sent_pair[foreign_name].split(' ')   #(l)
 
         #adding the alignment frame for each sentence
         alignment_dict[idx]=_create_alignment_prob_frame(eng_words,for_words)
@@ -182,3 +183,49 @@ def _get_expected_count_norm(idx,i,trans_prob,align_prob):
         norm+=_get_expected_count(idx,i,j,trans_prob,align_prob)
 
     return norm
+
+def expectum_maximum(trans_prob,align_prob,iteration=20):
+    '''
+    This function will swing the wand and maximize the expectation
+    until convergence.
+    '''
+    for iter in range(iteration):
+        _print_the_prob_dicts(trans_prob,align_prob)
+        trans_prob,align_prob=maximize_my_expectation_one_step(trans_prob,
+                                                        align_prob)
+
+    return trans_prob,align_prob
+
+def _print_the_prob_dicts(trans_prob,align_prob):
+    '''
+    This function will pring the probability dicts for verification
+    '''
+    #Printing the translation probability
+    print "\n########################################"
+    print "Printing the translation probability"
+    for fword in trans_prob.keys():
+        for eword in trans_prob[fword].keys():
+            print "F:{}\t\tE:{}\t\tprob:{}".format(fword,eword,
+                                        trans_prob[fword][eword])
+
+    #printing the alignment probability
+    print "\n#######################################"
+    print "Printing the alignemnt proability"
+    for idx in align_prob.keys():
+        for i in align_prob[idx].keys():
+            for j in align_prob[idx][i].keys():
+                print "idx:{}\tS:{}\t\tT:{}\t\tprob:{}".format(idx,i,j,
+                                                align_prob[idx][i][j])
+
+if __name__=='__main__':
+    #Loading the parallel corpus
+    filename='corpus/data1.json'
+    parallel_corpus=load_data_from_json(filename)
+
+    #Initializing the word translation probability dict
+    trans_prob=create_word_translation_prob_dict(parallel_corpus)
+    align_prob=create_alignment_prob_dict(parallel_corpus)
+
+    #Running the expectation maximization step
+    iteration=20
+    expectum_maximum(trans_prob,align_prob,iteration)
