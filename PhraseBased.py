@@ -2,10 +2,12 @@ import json
 from nltk.translate.phrase_based import phrase_extraction
 
 class PhraseBased(object):
+    '''
+    This class contains methods to implement the phrase based translation model.
+    '''
     data = None
     phraseList = []
 
-    """docstring for [object Object]."""
     def __init__(self, corpusFilePath):
         # with open('corpus/data2.json') as f:
         with open(corpusFilePath) as f:

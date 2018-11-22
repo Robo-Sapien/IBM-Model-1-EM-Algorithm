@@ -1,0 +1,399 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>expectation_maximization &#8212; IBM-model 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for expectation_maximization</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">parse_data</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">PhraseBased</span> <span class="k">import</span> <span class="n">PhraseBased</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+<span class="c1">####################### INITIALIZATION ###########################</span>
+<div class="viewcode-block" id="create_word_translation_prob_dict"><a class="viewcode-back" href="../index.html#expectation_maximization.create_word_translation_prob_dict">[docs]</a><span class="k">def</span> <span class="nf">create_word_translation_prob_dict</span><span class="p">(</span><span class="n">parallel_corpus</span><span class="p">,</span><span class="n">foreign_name</span><span class="o">=</span><span class="s1">&#39;fr&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This will create a dictionary mapping each french word to corresponding</span>
+<span class="sd">    english word for keeping their probability.</span>
+<span class="sd">    USAGE:</span>
+<span class="sd">        INPUT:</span>
+<span class="sd">            parallel_corpus         : the parallel corpus extracted from the</span>
+<span class="sd">                                        json file.</span>
+<span class="sd">        OUTPUT:</span>
+<span class="sd">            vocab_trans_prob_dict   : the vocalbary translation probability</span>
+<span class="sd">                                        dictionary of form:</span>
+<span class="sd">            {</span>
+<span class="sd">            french_word1 : {english_word1:prob,english_word2:prob,...},</span>
+<span class="sd">            french_word2 : {english_word1:prob,english_word2:prob,...},</span>
+<span class="sd">            ...</span>
+<span class="sd">            ...</span>
+<span class="sd">            }</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#Traversing the corpus to extract out the unique word</span>
+    <span class="n">english_word_bag</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">foreign_word_bag</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">init_prob_value</span><span class="o">=</span><span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">parallel_corpus</span><span class="p">:</span>
+        <span class="c1">#Taking out the words from the sentences</span>
+        <span class="n">english_words</span><span class="o">=</span><span class="n">sentence</span><span class="p">[</span><span class="s1">&#39;en&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="n">foreign_words</span><span class="o">=</span><span class="n">sentence</span><span class="p">[</span><span class="n">foreign_name</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+        <span class="c1">#Hashing the words from the dict</span>
+        <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">english_words</span><span class="p">:</span>
+            <span class="n">english_word_bag</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="o">=</span><span class="n">init_prob_value</span>
+        <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">foreign_words</span><span class="p">:</span>
+            <span class="n">foreign_word_bag</span><span class="p">[</span><span class="n">word</span><span class="p">]</span><span class="o">=</span><span class="n">init_prob_value</span>
+
+    <span class="c1">#Normalizing the probability as uniform distribution</span>
+    <span class="n">norm_prob</span><span class="o">=</span><span class="mf">1.0</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">english_word_bag</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">english_word_bag</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">english_word_bag</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="n">norm_prob</span>
+
+    <span class="c1">#Finally creating the vocab_trans_prob_dict P(ex|f1)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">foreign_word_bag</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">foreign_word_bag</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">english_word_bag</span><span class="p">)</span><span class="c1">#shallow copy</span>
+
+    <span class="c1">#Adding the NULL keyword in foreign to english translation dict</span>
+    <span class="n">foreign_word_bag</span><span class="p">[</span><span class="s1">&#39;NULL&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">english_word_bag</span>
+
+    <span class="k">return</span> <span class="n">foreign_word_bag</span></div>
+
+<div class="viewcode-block" id="create_alignment_prob_dict"><a class="viewcode-back" href="../index.html#expectation_maximization.create_alignment_prob_dict">[docs]</a><span class="k">def</span> <span class="nf">create_alignment_prob_dict</span><span class="p">(</span><span class="n">parallel_corpus</span><span class="p">,</span><span class="n">foreign_name</span><span class="o">=</span><span class="s1">&#39;fr&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function will keep a state table for all the probabilities</span>
+<span class="sd">    inside of alignment within a parallel sentence.</span>
+
+<span class="sd">    Alignment Dict Structure:</span>
+<span class="sd">    {</span>
+<span class="sd">        sentence 1: alignment frame</span>
+<span class="sd">        sentence 2: alignment frame</span>
+<span class="sd">        ...</span>
+<span class="sd">        ...</span>
+<span class="sd">    }</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">alignment_dict</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">prob_init_val</span><span class="o">=</span><span class="mf">0.0</span>
+
+    <span class="c1">#Iterating over all the statements and creating the alignament</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">sent_pair</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parallel_corpus</span><span class="p">):</span>
+        <span class="c1">#counting the number of word in each sentence</span>
+        <span class="n">eng_words</span><span class="o">=</span><span class="n">sent_pair</span><span class="p">[</span><span class="s1">&#39;en&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>             <span class="c1">#(m)</span>
+        <span class="n">for_words</span><span class="o">=</span><span class="n">sent_pair</span><span class="p">[</span><span class="n">foreign_name</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>   <span class="c1">#(l)</span>
+
+        <span class="c1">#adding the alignment frame for each sentence</span>
+        <span class="n">alignment_dict</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">=</span><span class="n">_create_alignment_prob_frame</span><span class="p">(</span><span class="n">eng_words</span><span class="p">,</span><span class="n">for_words</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">alignment_dict</span></div>
+
+<span class="k">def</span> <span class="nf">_create_alignment_prob_frame</span><span class="p">(</span><span class="n">eng_words</span><span class="p">,</span><span class="n">for_words</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function will create a frame for each alignment for each</span>
+<span class="sd">    sentence.</span>
+
+<span class="sd">    Alignment Frame Strucutre (for each sentence):</span>
+<span class="sd">    {</span>
+<span class="sd">        e0   : {NULL:prob, f0:prob, ... fl-1:prob}</span>
+<span class="sd">        e1   : {NULL:prob, f0:prob, ... fl-1:prob}</span>
+<span class="sd">        .</span>
+<span class="sd">        .</span>
+<span class="sd">        em-1 : {NULL:prob, f0:prob, ... fl-1:prob}</span>
+<span class="sd">    }</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">word_align_prob</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">align_prob_value</span><span class="o">=</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">for_words</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1">#Initializing the alignment probability</span>
+    <span class="n">word_align_prob</span><span class="p">[</span><span class="s1">&#39;NULL&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">align_prob_value</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">for_words</span><span class="p">:</span>
+        <span class="n">word_align_prob</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">=</span><span class="n">align_prob_value</span>
+
+    <span class="n">sentence_align_prob</span><span class="o">=</span><span class="p">{}</span>
+    <span class="c1">#Now adding this initilized prob for every word in source (English:m)</span>
+    <span class="k">for</span> <span class="n">mi</span> <span class="ow">in</span> <span class="n">eng_words</span><span class="p">:</span>
+        <span class="c1">#For each word in the source&#39;s mi th position prob of aligning to l+1 target</span>
+        <span class="n">sentence_align_prob</span><span class="p">[</span><span class="n">mi</span><span class="p">]</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">word_align_prob</span><span class="p">)</span><span class="c1">#shallow copy</span>
+
+    <span class="k">return</span> <span class="n">sentence_align_prob</span>
+
+<span class="c1">###################### EM-ALGORITHM #############################</span>
+<div class="viewcode-block" id="maximize_my_expectation_one_step"><a class="viewcode-back" href="../index.html#expectation_maximization.maximize_my_expectation_one_step">[docs]</a><span class="k">def</span> <span class="nf">maximize_my_expectation_one_step</span><span class="p">(</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function will take the tanslation probability of each word to</span>
+<span class="sd">    word translation along with the positional alignment probability</span>
+<span class="sd">    and them run one step of expectation maximization by estimating the</span>
+<span class="sd">    alignment which will in-turn change the translation probabilty.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#Retreiving the foreign and english words</span>
+    <span class="n">foreign_words</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">trans_prob</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">english_words</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">trans_prob</span><span class="p">[</span><span class="n">foreign_words</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="c1">#Initializing the count dict</span>
+    <span class="n">count_trans_f2e</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">count_f</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">fword</span> <span class="ow">in</span> <span class="n">foreign_words</span><span class="p">:</span>
+        <span class="n">count_f</span><span class="p">[</span><span class="n">fword</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">eword</span> <span class="ow">in</span> <span class="n">english_words</span><span class="p">:</span>
+            <span class="n">count_trans_f2e</span><span class="p">[(</span><span class="n">eword</span><span class="p">,</span><span class="n">fword</span><span class="p">)]</span><span class="o">=</span><span class="mf">0.0</span>
+
+    <span class="c1">#Initializing the alignent count dict for each sentence</span>
+    <span class="n">count_align_i2j</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">count_i</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span><span class="c1">#word in english (source)</span>
+            <span class="n">count_i</span><span class="p">[(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">)]</span><span class="o">=</span><span class="mf">0.0</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span><span class="c1">#words in foreign</span>
+                <span class="n">count_align_i2j</span><span class="p">[(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)]</span><span class="o">=</span><span class="mf">0.0</span>
+
+    <span class="c1">#Now we will iterate over all the examples</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="c1">#Now iterating over the words of source (aka english)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1">#Calculating the norm for the delta</span>
+            <span class="n">norm</span><span class="o">=</span><span class="n">_get_expected_count_norm</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="c1">#Calculating the expected count(could optimize here)</span>
+                <span class="n">delta</span><span class="o">=</span><span class="n">_get_expected_count</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">)</span>
+                <span class="c1">#Normalizing the delta</span>
+                <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="o">/</span><span class="n">norm</span>
+
+                <span class="c1">#Now adding the expected count to the each counters</span>
+                <span class="n">count_trans_f2e</span><span class="p">[(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)]</span><span class="o">+=</span><span class="n">delta</span>
+                <span class="n">count_f</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">+=</span><span class="n">delta</span>
+                <span class="n">count_align_i2j</span><span class="p">[(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)]</span><span class="o">+=</span><span class="n">delta</span>
+                <span class="n">count_i</span><span class="p">[(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">)]</span><span class="o">+=</span><span class="n">delta</span>
+
+    <span class="c1">#Now after all count is done we will calculate the new probs</span>
+    <span class="c1">#Calculating the probability of words</span>
+    <span class="k">for</span> <span class="n">fword</span> <span class="ow">in</span> <span class="n">trans_prob</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">eword</span> <span class="ow">in</span> <span class="n">trans_prob</span><span class="p">[</span><span class="n">fword</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1">#print fword,eword,count_trans_f2e[(eword,fword)],count_f[fword]</span>
+            <span class="n">trans_prob</span><span class="p">[</span><span class="n">fword</span><span class="p">][</span><span class="n">eword</span><span class="p">]</span><span class="o">=</span><span class="n">count_trans_f2e</span><span class="p">[(</span><span class="n">eword</span><span class="p">,</span><span class="n">fword</span><span class="p">)]</span><span class="o">/</span><span class="n">count_f</span><span class="p">[</span><span class="n">fword</span><span class="p">]</span>
+
+    <span class="c1">#Calculating the new probablity of alignment</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="n">count_align_i2j</span><span class="p">[(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)]</span><span class="o">/</span><span class="n">count_i</span><span class="p">[(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">)]</span>
+
+    <span class="c1">#returning the local copy</span>
+    <span class="k">return</span> <span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span></div>
+
+<span class="k">def</span> <span class="nf">_get_expected_count</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This will give the expected count for a partucluar index</span>
+<span class="sd">    for a particular ith source word to jth foreign word mapping.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">delta</span><span class="o">=</span><span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">trans_prob</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">delta</span>
+
+<span class="k">def</span> <span class="nf">_get_expected_count_norm</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function will calculate the normalization for the exprected</span>
+<span class="sd">    count probability.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">norm</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">norm</span><span class="o">+=</span><span class="n">_get_expected_count</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">norm</span>
+
+<div class="viewcode-block" id="expectum_maximum"><a class="viewcode-back" href="../index.html#expectation_maximization.expectum_maximum">[docs]</a><span class="k">def</span> <span class="nf">expectum_maximum</span><span class="p">(</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">,</span><span class="n">iteration</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function will swing the wand and maximize the expectation</span>
+<span class="sd">    until convergence.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">for</span> <span class="nb">iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iteration</span><span class="p">):</span>
+        <span class="c1">#print (&quot;\n\n\n\n\n\n\n&quot;)</span>
+        <span class="c1">#_print_the_prob_dicts(trans_prob,align_prob)</span>
+        <span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="o">=</span><span class="n">maximize_my_expectation_one_step</span><span class="p">(</span><span class="n">trans_prob</span><span class="p">,</span>
+                                                        <span class="n">align_prob</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span></div>
+
+<div class="viewcode-block" id="extract_most_probable_alignment_of_pair"><a class="viewcode-back" href="../index.html#expectation_maximization.extract_most_probable_alignment_of_pair">[docs]</a><span class="k">def</span> <span class="nf">extract_most_probable_alignment_of_pair</span><span class="p">(</span><span class="n">sent_id</span><span class="p">,</span><span class="n">sent_pair</span><span class="p">,</span><span class="n">trans_prob</span><span class="p">,</span>
+                                            <span class="n">align_prob</span><span class="p">,</span><span class="n">foreign_name</span><span class="o">=</span><span class="s1">&#39;fr&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function will use the converged values of the alignment</span>
+<span class="sd">    and the translation probability to extract the most probable alignment</span>
+<span class="sd">    of each sentence.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#Extracting out the sentence (in order)</span>
+    <span class="n">eng_words</span><span class="o">=</span><span class="n">sent_pair</span><span class="p">[</span><span class="s1">&#39;en&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">for_words</span><span class="o">=</span><span class="n">sent_pair</span><span class="p">[</span><span class="n">foreign_name</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="c1">#Appending the NULL word at the end</span>
+    <span class="n">for_words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;NULL&#39;</span><span class="p">)</span>
+
+    <span class="c1">#Starting the alignment for each word to corresponding</span>
+    <span class="n">align_list</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">eword</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">eng_words</span><span class="p">):</span><span class="c1">#trevalling through each source word</span>
+        <span class="n">max_prob</span><span class="o">=</span><span class="mf">0.0</span>    <span class="c1">#unnormalized probability</span>
+        <span class="n">max_idx</span><span class="o">=-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">fword</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">for_words</span><span class="p">):</span>
+            <span class="c1">#Calculating the alignemnt probability of this edge</span>
+            <span class="n">temp_prob</span><span class="o">=</span><span class="n">align_prob</span><span class="p">[</span><span class="n">sent_id</span><span class="p">][</span><span class="n">eword</span><span class="p">][</span><span class="n">fword</span><span class="p">]</span><span class="o">*</span>\
+                        <span class="n">trans_prob</span><span class="p">[</span><span class="n">fword</span><span class="p">][</span><span class="n">eword</span><span class="p">]</span>
+            <span class="c1">#Now checking the max probable alignment</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">temp_prob</span><span class="o">&gt;</span><span class="n">max_prob</span><span class="p">):</span>
+                <span class="n">max_prob</span><span class="o">=</span><span class="n">temp_prob</span>
+                <span class="n">max_idx</span><span class="o">=</span><span class="n">j</span>
+        <span class="c1">#Now we got the word mapping which has maximum</span>
+        <span class="c1">#probability of translation from current source word</span>
+        <span class="n">align_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">max_idx</span><span class="p">,</span><span class="n">i</span><span class="p">))</span>
+    <span class="n">align_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">align_list</span><span class="p">,</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">align_list</span></div>
+
+<div class="viewcode-block" id="extract_alignment"><a class="viewcode-back" href="../index.html#expectation_maximization.extract_alignment">[docs]</a><span class="k">def</span> <span class="nf">extract_alignment</span><span class="p">(</span><span class="n">parallel_corpus</span><span class="p">,</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function will extract the alignment for each sentences</span>
+<span class="sd">    and return the list of all the alignemnt of each sentences.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">all_align_list</span><span class="o">=</span><span class="p">[]</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n\n\n</span><span class="s2">Finding the best possible alignment&quot;</span><span class="p">)</span>
+    <span class="c1">#Iterating over all the sentences and getting the alignment</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span><span class="n">sent_pair</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parallel_corpus</span><span class="p">):</span>
+        <span class="c1">#Finding the alignemnt for this sentence pair</span>
+        <span class="n">align_list</span><span class="o">=</span><span class="n">extract_most_probable_alignment_of_pair</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span><span class="n">sent_pair</span><span class="p">,</span>
+                                            <span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">)</span>
+        <span class="c1">#Appending the alignment for this sentences</span>
+        <span class="n">all_align_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">align_list</span><span class="p">)</span>
+
+        <span class="c1">#Printing the alignment</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Best alignment for sentence: &quot;</span><span class="p">,</span><span class="n">idx</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="n">align_list</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">all_align_list</span></div>
+
+<span class="c1">##################### AUXILARY ###############################</span>
+<span class="k">def</span> <span class="nf">_print_the_prob_dicts</span><span class="p">(</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function will pring the probability dicts for verification</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#Printing the translation probability</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">########################################&quot;</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Printing the translation probability&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">fword</span> <span class="ow">in</span> <span class="n">trans_prob</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">eword</span> <span class="ow">in</span> <span class="n">trans_prob</span><span class="p">[</span><span class="n">fword</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;F:</span><span class="si">{}</span><span class="se">\t\t</span><span class="s2">E:</span><span class="si">{}</span><span class="se">\t\t</span><span class="s2">prob:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fword</span><span class="p">,</span><span class="n">eword</span><span class="p">,</span>
+                                        <span class="n">trans_prob</span><span class="p">[</span><span class="n">fword</span><span class="p">][</span><span class="n">eword</span><span class="p">]))</span>
+
+    <span class="c1">#printing the alignment probability</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">#######################################&quot;</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Printing the alignemnt proability&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;idx:</span><span class="si">{}</span><span class="se">\t</span><span class="s2">S:</span><span class="si">{}</span><span class="se">\t\t</span><span class="s2">T:</span><span class="si">{}</span><span class="se">\t\t</span><span class="s2">prob:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span>
+                                                <span class="n">align_prob</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]))</span>
+
+<span class="c1">##################### MAIN FUNCTION ##########################</span>
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1">#Loading the parallel corpus</span>
+    <span class="n">filename</span><span class="o">=</span><span class="s1">&#39;corpus/testData.json&#39;</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="n">parallel_corpus</span><span class="o">=</span><span class="n">load_data_from_json</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="c1">#Initializing the word translation probability dict</span>
+    <span class="n">trans_prob</span><span class="o">=</span><span class="n">create_word_translation_prob_dict</span><span class="p">(</span><span class="n">parallel_corpus</span><span class="p">)</span>
+    <span class="n">align_prob</span><span class="o">=</span><span class="n">create_alignment_prob_dict</span><span class="p">(</span><span class="n">parallel_corpus</span><span class="p">)</span>
+
+    <span class="c1">#Running the expectation maximization step</span>
+    <span class="n">iteration</span><span class="o">=</span><span class="mi">20</span>
+    <span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="o">=</span><span class="n">expectum_maximum</span><span class="p">(</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">,</span><span class="n">iteration</span><span class="p">)</span>
+
+    <span class="c1">#Extracting the best possible alignemnt</span>
+    <span class="n">alignments</span> <span class="o">=</span> <span class="n">extract_alignment</span><span class="p">(</span><span class="n">parallel_corpus</span><span class="p">,</span><span class="n">trans_prob</span><span class="p">,</span><span class="n">align_prob</span><span class="p">)</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n\n\n\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">t2</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">PhraseBased</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">extractPhrases</span><span class="p">(</span><span class="n">alignments</span><span class="p">)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">calculateProbabilityScore</span><span class="p">()</span>
+    <span class="n">t3</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">t3</span><span class="o">-</span><span class="n">t2</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">IBM-model</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Yashdeep Thorat.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

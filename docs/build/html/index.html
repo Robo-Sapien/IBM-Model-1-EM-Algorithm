@@ -1,0 +1,209 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Documentation for the Code &#8212; IBM-model 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="documentation-for-the-code">
+<h1>Documentation for the Code<a class="headerlink" href="#documentation-for-the-code" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="module-expectation_maximization">
+<span id="custom-implementation-of-ibm-model-1"></span><h2>Custom Implementation of IBM Model 1<a class="headerlink" href="#module-expectation_maximization" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="expectation_maximization.create_alignment_prob_dict">
+<code class="descclassname">expectation_maximization.</code><code class="descname">create_alignment_prob_dict</code><span class="sig-paren">(</span><em>parallel_corpus</em>, <em>foreign_name='fr'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/expectation_maximization.html#create_alignment_prob_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#expectation_maximization.create_alignment_prob_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function will keep a state table for all the probabilities
+inside of alignment within a parallel sentence.</p>
+<p>Alignment Dict Structure:
+{</p>
+<blockquote>
+<div>sentence 1: alignment frame
+sentence 2: alignment frame
+…
+…</div></blockquote>
+<p>}</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="expectation_maximization.create_word_translation_prob_dict">
+<code class="descclassname">expectation_maximization.</code><code class="descname">create_word_translation_prob_dict</code><span class="sig-paren">(</span><em>parallel_corpus</em>, <em>foreign_name='fr'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/expectation_maximization.html#create_word_translation_prob_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#expectation_maximization.create_word_translation_prob_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will create a dictionary mapping each french word to corresponding
+english word for keeping their probability.
+USAGE:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>INPUT:</dt>
+<dd><dl class="first last docutils">
+<dt>parallel_corpus <span class="classifier-delimiter">:</span> <span class="classifier">the parallel corpus extracted from the</span></dt>
+<dd>json file.</dd>
+</dl>
+</dd>
+<dt>OUTPUT:</dt>
+<dd><dl class="first docutils">
+<dt>vocab_trans_prob_dict <span class="classifier-delimiter">:</span> <span class="classifier">the vocalbary translation probability</span></dt>
+<dd>dictionary of form:</dd>
+</dl>
+<p class="last">{
+french_word1 : {english_word1:prob,english_word2:prob,…},
+french_word2 : {english_word1:prob,english_word2:prob,…},
+…
+…
+}</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="expectation_maximization.expectum_maximum">
+<code class="descclassname">expectation_maximization.</code><code class="descname">expectum_maximum</code><span class="sig-paren">(</span><em>trans_prob</em>, <em>align_prob</em>, <em>iteration=20</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/expectation_maximization.html#expectum_maximum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#expectation_maximization.expectum_maximum" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function will swing the wand and maximize the expectation
+until convergence.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="expectation_maximization.extract_alignment">
+<code class="descclassname">expectation_maximization.</code><code class="descname">extract_alignment</code><span class="sig-paren">(</span><em>parallel_corpus</em>, <em>trans_prob</em>, <em>align_prob</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/expectation_maximization.html#extract_alignment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#expectation_maximization.extract_alignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function will extract the alignment for each sentences
+and return the list of all the alignemnt of each sentences.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="expectation_maximization.extract_most_probable_alignment_of_pair">
+<code class="descclassname">expectation_maximization.</code><code class="descname">extract_most_probable_alignment_of_pair</code><span class="sig-paren">(</span><em>sent_id</em>, <em>sent_pair</em>, <em>trans_prob</em>, <em>align_prob</em>, <em>foreign_name='fr'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/expectation_maximization.html#extract_most_probable_alignment_of_pair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#expectation_maximization.extract_most_probable_alignment_of_pair" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function will use the converged values of the alignment
+and the translation probability to extract the most probable alignment
+of each sentence.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="expectation_maximization.maximize_my_expectation_one_step">
+<code class="descclassname">expectation_maximization.</code><code class="descname">maximize_my_expectation_one_step</code><span class="sig-paren">(</span><em>trans_prob</em>, <em>align_prob</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/expectation_maximization.html#maximize_my_expectation_one_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#expectation_maximization.maximize_my_expectation_one_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function will take the tanslation probability of each word to
+word translation along with the positional alignment probability
+and them run one step of expectation maximization by estimating the
+alignment which will in-turn change the translation probabilty.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-comparison_nltk">
+<span id="ibm-model-1-and-2-using-nltk"></span><h2>IBM Model 1 and 2 using nltk<a class="headerlink" href="#module-comparison_nltk" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="comparison_nltk.IBM">
+<code class="descclassname">comparison_nltk.</code><code class="descname">IBM</code><span class="sig-paren">(</span><em>target_listOflists_words</em>, <em>source_listOflists_words</em>, <em>flag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/comparison_nltk.html#IBM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#comparison_nltk.IBM" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes parallel corpus as input and flag variable (1 for IBM Model 1 &amp; 2 for IBM Model 2) and outputs 
+the alignments</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="comparison_nltk.tokenize">
+<code class="descclassname">comparison_nltk.</code><code class="descname">tokenize</code><span class="sig-paren">(</span><em>target_corpus</em>, <em>source_corpus</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/comparison_nltk.html#tokenize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#comparison_nltk.tokenize" title="Permalink to this definition">¶</a></dt>
+<dd><p>This helper function tokenizes the sentences into words to be used as input for NLTK implementations</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-PhraseBased">
+<span id="phrase-based-translation-model"></span><h2>Phrase based translation model<a class="headerlink" href="#module-PhraseBased" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="PhraseBased.PhraseBased">
+<em class="property">class </em><code class="descclassname">PhraseBased.</code><code class="descname">PhraseBased</code><span class="sig-paren">(</span><em>corpusFilePath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PhraseBased.html#PhraseBased"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PhraseBased.PhraseBased" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class contains methods to implement the phrase based translation model.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">IBM-model</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Yashdeep Thorat.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
