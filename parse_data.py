@@ -7,7 +7,7 @@ def load_data_from_json(filename):
     '''
     with open(filename) as fhandle:
         data=json.load(fhandle)
-        print data
+        #print data
     return data
 
 

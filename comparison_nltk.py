@@ -2,6 +2,7 @@ from nltk.translate import AlignedSent, Alignment
 from nltk.translate.ibm1 import IBMModel1
 from nltk.translate.ibm2 import IBMModel2
 from nltk import word_tokenize
+from parse_data import *
 
 
 def IBM(target_listOflists_words, source_listOflists_words, flag):
@@ -9,7 +10,7 @@ def IBM(target_listOflists_words, source_listOflists_words, flag):
 	model1_output_list = []
 
 	for target_words,source_words in zip(target_listOflists_words, source_listOflists_words):
-		model1_output_list.append(AlignedSent(word_tokenize(target_words),word_tokenize(source_words)))
+		model1_output_list.append(AlignedSent(target_words.split(),source_words.split()))
 
 	if(flag==1):
 		ibm1 = IBMModel1(model1_output_list, 50)
@@ -36,6 +37,18 @@ def tokenize(target_corpus, source_corpus):
 	return target_listOflists_words,source_listOflists_words
 
 if __name__=='__main__':
+	filename='corpus/data2.json'
+	parallel_corpus=load_data_from_json(filename)
+	#Creating target and source corpus
+	target_corpus=[]
+	source_corpus=[]
+	for sent_pair in parallel_corpus:
+		eng_sent=str(sent_pair['en'])
+		for_sent=str(sent_pair['fr'])
+
+		target_corpus.append(for_sent)
+		source_corpus.append(eng_sent)
+
 	#model1_raw_output = IBM([['klein', 'ist', 'das', 'haus'],['das', 'haus', 'ist', 'ja', 'gro'],['das', 'buch', 'ist', 'ja', 'klein'],['das', 'haus'],['das', 'buch'],['ein', 'buch']], [['the', 'house', 'is', 'small'], ['the', 'house', 'is', 'big'], ['the', 'book', 'is', 'small'], ['the', 'house'], ['the', 'book'], ['a', 'book']],1)
 
 	#target_listOflists_words,source_listOflists_words = ["la maison","la fleur","la maison bleu","la fleur bleu","pomme bleu"],["the house","the flower","the blue house","the blue flower","blue apple"]
@@ -47,6 +60,8 @@ if __name__=='__main__':
 	model1_raw_output = IBM(target_listOflists_words, source_listOflists_words, 1)
 	model2_raw_output = IBM(target_listOflists_words, source_listOflists_words, 2)
 
+	print(model2_raw_output)
+	
 	print("##### MODEL 1 #####")
 	for list in model1_raw_output:
 		print(list.words)
@@ -55,10 +70,12 @@ if __name__=='__main__':
 		print(" ")
 
 	print(" ")
-	print("##### MODEL 2 #####")		
+	print("##### MODEL 2 #####")	
+
+
 	for list in model2_raw_output:
 		print(list.words)
 		print(list.mots)
-		print(list.alignment)
+		#print(list.alignment)
 		print(" ")
 	

@@ -230,8 +230,8 @@ def extract_most_probable_alignment_of_pair(sent_id,sent_pair,trans_prob,
                 max_idx=j
         #Now we got the word mapping which has maximum
         #probability of translation from current source word
-        align_list.append((i,max_idx))
-
+        align_list.append((max_idx,i))
+    align_list = sorted(align_list,key = lambda x: x[0])
     return align_list
 
 def extract_alignment(parallel_corpus,trans_prob,align_prob):
@@ -280,7 +280,7 @@ def _print_the_prob_dicts(trans_prob,align_prob):
 ##################### MAIN FUNCTION ##########################
 if __name__=='__main__':
     #Loading the parallel corpus
-    filename='corpus/data1.json'
+    filename='corpus/data2.json'
     parallel_corpus=load_data_from_json(filename)
 
     #Initializing the word translation probability dict
