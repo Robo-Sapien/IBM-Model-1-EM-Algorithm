@@ -37,7 +37,7 @@ def tokenize(target_corpus, source_corpus):
 	return target_listOflists_words,source_listOflists_words
 
 if __name__=='__main__':
-	filename='corpus/data2.json'
+	filename='corpus/data1.json'
 	parallel_corpus=load_data_from_json(filename)
 	#Creating target and source corpus
 	target_corpus=[]
@@ -74,9 +74,10 @@ if __name__=='__main__':
 
 
 	for list in model2_raw_output:
-		print(list)
-		'''
+		#print(list)
+		
+		print(list.words)
 		print(list.mots)
 		print(list.alignment)
 		print(" ")
-		'''
+		
