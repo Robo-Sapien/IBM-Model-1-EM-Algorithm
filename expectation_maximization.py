@@ -43,7 +43,7 @@ def create_word_translation_prob_dict(parallel_corpus,foreign_name='fr'):
 
     #Finally creating the vocab_trans_prob_dict P(ex|f1)
     for key in foreign_word_bag.keys():
-        foreign_word_bag[key]=english_word_bag
+        foreign_word_bag[key]=dict(english_word_bag)#shallow copy
 
     #Adding the NULL keyword in foreign to english translation dict
     foreign_word_bag['NULL']=english_word_bag
@@ -102,7 +102,7 @@ def _create_alignment_prob_frame(eng_words,for_words):
     #Now adding this initilized prob for every word in source (English:m)
     for mi in eng_words:
         #For each word in the source's mi th position prob of aligning to l+1 target
-        sentence_align_prob[mi]=word_align_prob
+        sentence_align_prob[mi]=dict(word_align_prob)#shallow copy
 
     return sentence_align_prob
 
@@ -157,6 +157,7 @@ def maximize_my_expectation_one_step(trans_prob,align_prob):
     #Calculating the probability of words
     for fword in trans_prob.keys():
         for eword in trans_prob[fword].keys():
+            #print fword,eword,count_trans_f2e[(eword,fword)],count_f[fword]
             trans_prob[fword][eword]=count_trans_f2e[(eword,fword)]/count_f[fword]
 
     #Calculating the new probablity of alignment
@@ -194,6 +195,7 @@ def expectum_maximum(trans_prob,align_prob,iteration=20):
     until convergence.
     '''
     for iter in range(iteration):
+        print "\n\n\n\n\n\n\n"
         _print_the_prob_dicts(trans_prob,align_prob)
         trans_prob,align_prob=maximize_my_expectation_one_step(trans_prob,
                                                         align_prob)
