@@ -282,7 +282,7 @@ def _print_the_prob_dicts(trans_prob,align_prob):
 ##################### MAIN FUNCTION ##########################
 if __name__=='__main__':
     #Loading the parallel corpus
-    filename='corpus/testData.json'
+    filename='corpus/data2.json'
     t0 = datetime.datetime.now()
     parallel_corpus=load_data_from_json(filename)
 
