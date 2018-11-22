@@ -67,37 +67,38 @@ def create_alignment_prob_dict(parallel_corpus,foreign_name='fr'):
     #Iterating over all the statements and creating the alignament
     for idx,sent_pair in enumerate(parallel_corpus):
         #counting the number of word in each sentence
-        num_eng=sentence_pair['en']             #(m)
-        num_for=sentence_pair['foreign_name']+1 #(l+1)
+        eng_words=sentence_pair['en'].split(' ')             #(m)
+        for_words=sentence_pair['foreign_name'].split(' ')   #(l)
 
         #adding the alignment frame for each sentence
-        alignment_dict[idx]=_create_alignment_prob_frame(num_eng,num_for)
+        alignment_dict[idx]=_create_alignment_prob_frame(eng_words,for_words)
 
     return alignment_dict
 
-def _create_alignment_prob_frame(m,l_plus_1):
+def _create_alignment_prob_frame(eng_words,for_words):
     '''
     This function will create a frame for each alignment for each
     sentence.
 
     Alignment Frame Strucutre (for each sentence):
     {
-        0   : {0:prob, 1:prob, ... l:prob}
-        1   : {0:prob, 1:prob, ... l:prob}
+        e0   : {NULL:prob, f0:prob, ... fl-1:prob}
+        e1   : {NULL:prob, f0:prob, ... fl-1:prob}
         .
         .
-        m-1 : {0:prob, 1:prob, ... l:prob}
+        em-1 : {NULL:prob, f0:prob, ... fl-1:prob}
     }
     '''
     word_align_prob={}
-    align_prob_value=1.0/l_plus_1
+    align_prob_value=1.0/(len(for_words)+1)
     #Initializing the alignment probability
-    for l in range(l_plus_1):
+    word_align_prob['NULL']=align_prob_value
+    for l in for_words:
         word_align_prob[l]=align_prob_value
 
     sentence_align_prob={}
     #Now adding this initilized prob for every word in source (English:m)
-    for mi in range(m):
+    for mi in eng_words:
         #For each word in the source's mi th position prob of aligning to l+1 target
         sentence_align_prob[mi]=word_align_prob
 
@@ -125,29 +126,59 @@ def maximize_my_expectation_one_step(trans_prob,align_prob):
     #Initializing the alignent count dict for each sentence
     count_align_i2j={}
     count_i={}
-    for idx in range(len(align_prob.keys())):
-        ms=len(align_prob[idx].keys())
-        l_plus_1=len(align_prob[idx][0].keys())
-        for i in range(ms):
+    for idx in align_prob.keys():
+        for i in align_prob[idx].keys():#word in english (source)
             count_i[(idx,i)]=0.0
-            for j in range(l_plus_1):
+            for j in align_prob[idx][i].keys():#words in foreign
                 count_align_i2j[(idx,i,j)]=0.0
 
     #Now we will iterate over all the examples
-    for examples in range(len(align_prob.keys())):
-        #Retreiving the ms and lvalue
-        ms=len(align_prob[idx].keys())
-        l_plus_1=len(align_prob[idx][0].keys())
-
+    for idx in align_prob.keys():
         #Now iterating over the words of source (aka english)
-        for i in range(ms):
-            for j in range(l_plus_1):
-                #Calculating the expected count
+        for i in align_prob[idx].keys():
+            #Calculating the norm for the delta
+            norm=_get_expected_count_norm(idx,i,trans_prob,align_prob)
+            for j in align_prob[idx][i].keys():
+                #Calculating the expected count(could optimize here)
+                delta=_get_expected_count(idx,i,j,trans_prob,align_prob)
+                #Normalizing the delta
+                delta=delta/norm
 
-def _get_expected_count(idx,i,j,trans_prob,align_prob,
-                        foreign_words,english_words):
+                #Now adding the expected count to the each counters
+                count_trans_f2e[(i,j)]+=delta
+                count_f[j]+=delta
+                count_align_i2j[(idx,i,j)]+=delta
+                count_i[(idx,i)]+=delta
+
+    #Now after all count is done we will calculate the new probs
+    #Calculating the probability of words
+    for fword in trans_prob.keys():
+        for eword in trans_prob.keys():
+            trans_prob[fword][eword]=count_trans_f2e[(eword,fword)]/countf[word]
+
+    #Calculating the new probablity of alignment
+    for idx in align_prob.keys():
+        for i in align_prob[idx].keys():
+            for j in align_prob[idx][i].keys():
+                align_prob[idx][i][j]=count_align_i2j[(idx,i,j)]/count_i[(idx,i)]
+
+    #returning the local copy
+    return trans_prob,align_prob
+
+def _get_expected_count(idx,i,j,trans_prob,align_prob):
     '''
     This will give the expected count for a partucluar index
     for a particular ith source word to jth foreign word mapping.
     '''
-    delta=align_prob[idx][i][j]*trans_prob[foreign_words[]]
+    delta=align_prob[idx][i][j]*trans_prob[j][i]
+
+def _get_expected_count_norm(idx,i,trans_prob,align_prob):
+    '''
+    This function will calculate the normalization for the exprected
+    count probability.
+    '''
+    norm=0.0
+    for j in align_prob[idx][i].keys():
+        norm+=_get_expected_count(idx,i,j,trans_prob,align_prob)
+
+    return norm
