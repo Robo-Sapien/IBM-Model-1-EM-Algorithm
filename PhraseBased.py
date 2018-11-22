@@ -37,7 +37,7 @@ class PhraseBased(object):
                         denominator += 1
                         if tup[1] == phrase[1]:
                             numerator += 1
-                probability = numerator/denominator
+                probability = numerator*1.0/denominator
                 done.add(tuple((phrase[1], phrase[0])))
                 probabilityList.append((phrase[1], phrase[0], probability))
 
