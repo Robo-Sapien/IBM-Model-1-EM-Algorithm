@@ -74,8 +74,9 @@ if __name__=='__main__':
 
 
 	for list in model2_raw_output:
-		print(list.words)
+		print(list)
+		'''
 		print(list.mots)
-		#print(list.alignment)
+		print(list.alignment)
 		print(" ")
-	
+		'''
