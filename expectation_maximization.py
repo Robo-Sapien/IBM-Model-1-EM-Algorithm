@@ -1,5 +1,6 @@
 import numpy as np
 from parse_data import *
+from PhraseBased import PhraseBased
 
 ####################### INITIALIZATION ###########################
 def create_word_translation_prob_dict(parallel_corpus,foreign_name='fr'):
@@ -115,8 +116,8 @@ def maximize_my_expectation_one_step(trans_prob,align_prob):
     alignment which will in-turn change the translation probabilty.
     '''
     #Retreiving the foreign and english words
-    foreign_words=trans_prob.keys()
-    english_words=trans_prob[foreign_words[0]].keys()
+    foreign_words=list(trans_prob.keys())
+    english_words=list(trans_prob[foreign_words[0]].keys())
 
     #Initializing the count dict
     count_trans_f2e={}
@@ -195,7 +196,7 @@ def expectum_maximum(trans_prob,align_prob,iteration=20):
     until convergence.
     '''
     for iter in range(iteration):
-        print "\n\n\n\n\n\n\n"
+        print ("\n\n\n\n\n\n\n")
         _print_the_prob_dicts(trans_prob,align_prob)
         trans_prob,align_prob=maximize_my_expectation_one_step(trans_prob,
                                                         align_prob)
@@ -240,7 +241,7 @@ def extract_alignment(parallel_corpus,trans_prob,align_prob):
     and return the list of all the alignemnt of each sentences.
     '''
     all_align_list=[]
-    print "\n\n\n\nFinding the best possible alignment"
+    print ("\n\n\n\nFinding the best possible alignment")
     #Iterating over all the sentences and getting the alignment
     for idx,sent_pair in enumerate(parallel_corpus):
         #Finding the alignemnt for this sentence pair
@@ -250,8 +251,8 @@ def extract_alignment(parallel_corpus,trans_prob,align_prob):
         all_align_list.append(align_list)
 
         #Printing the alignment
-        print "Best alignment for sentence: ",idx
-        print align_list
+        print ("Best alignment for sentence: ",idx)
+        print (align_list)
 
     return all_align_list
 
@@ -261,21 +262,21 @@ def _print_the_prob_dicts(trans_prob,align_prob):
     This function will pring the probability dicts for verification
     '''
     #Printing the translation probability
-    print "\n########################################"
-    print "Printing the translation probability"
+    print ("\n########################################")
+    print ("Printing the translation probability")
     for fword in trans_prob.keys():
         for eword in trans_prob[fword].keys():
-            print "F:{}\t\tE:{}\t\tprob:{}".format(fword,eword,
-                                        trans_prob[fword][eword])
+            print ("F:{}\t\tE:{}\t\tprob:{}".format(fword,eword,
+                                        trans_prob[fword][eword]))
 
     #printing the alignment probability
-    print "\n#######################################"
-    print "Printing the alignemnt proability"
+    print ("\n#######################################")
+    print ("Printing the alignemnt proability")
     for idx in align_prob.keys():
         for i in align_prob[idx].keys():
             for j in align_prob[idx][i].keys():
-                print "idx:{}\tS:{}\t\tT:{}\t\tprob:{}".format(idx,i,j,
-                                                align_prob[idx][i][j])
+                print ("idx:{}\tS:{}\t\tT:{}\t\tprob:{}".format(idx,i,j,
+                                                align_prob[idx][i][j]))
 
 ##################### MAIN FUNCTION ##########################
 if __name__=='__main__':
@@ -292,4 +293,8 @@ if __name__=='__main__':
     trans_prob,align_prob=expectum_maximum(trans_prob,align_prob,iteration)
 
     #Extracting the best possible alignemnt
-    extract_alignment(parallel_corpus,trans_prob,align_prob)
+    alignments = extract_alignment(parallel_corpus,trans_prob,align_prob)
+    print ("\n\n\n\n\n\n")
+    obj = PhraseBased(filename)
+    obj.extractPhrases(alignments)
+    obj.calculateProbabilityScore()

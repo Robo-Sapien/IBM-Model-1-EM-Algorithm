@@ -6,9 +6,9 @@ class PhraseBased(object):
     phraseList = []
 
     """docstring for [object Object]."""
-    def __init__(self):
+    def __init__(self, corpusFilePath):
         # with open('corpus/data2.json') as f:
-        with open('corpus/testData.json') as f:
+        with open(corpusFilePath) as f:
             self.data = json.load(f)
 
     def extractPhrases(self,alignments):
@@ -42,11 +42,11 @@ class PhraseBased(object):
                 probabilityList.append((phrase[1], phrase[0], probability))
 
 
-        for i in sorted(probabilityList, key = lambda x: -x[2]):
-            print(i)
+        for i in sorted(probabilityList, key = lambda x: (-x[2],x[1])):
+            print(i[1], "\t", i[0], "\t", i[2])
 
 if __name__ == '__main__':
-    obj = PhraseBased()
+    obj = PhraseBased('corpus/testData.json')
     alignments = [[(0,0), (1,1), (1,2), (1,3), (2,5), (3,6), (4,9), (5,9), (6,7), (7,7), (8,8)]]
     obj.extractPhrases(alignments)
     obj.calculateProbabilityScore()
